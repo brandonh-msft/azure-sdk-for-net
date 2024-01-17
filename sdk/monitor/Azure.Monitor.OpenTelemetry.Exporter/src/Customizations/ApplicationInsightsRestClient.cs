@@ -3,7 +3,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,6 +36,8 @@ namespace Azure.Monitor.OpenTelemetry.Exporter
             }
 
             var message = CreateTrackRequest(body);
+            var bodyMessages = body.Where(i => i.Data.BaseData is MessageData).Select(i => ((MessageData)i.Data.BaseData).Message).ToList();
+            System.Diagnostics.Debug.WriteLine($@"InternalTrackAsync(IEnumerable<TelemetryItem>): {JsonSerializer.Serialize(bodyMessages)}");
 
             try
             {
@@ -61,6 +66,13 @@ namespace Azure.Monitor.OpenTelemetry.Exporter
         internal async Task<HttpMessage> InternalTrackAsync(ReadOnlyMemory<byte> body, CancellationToken cancellationToken = default)
         {
             var message = CreateTrackRequest(body);
+
+#if DEBUG
+            MemoryStream ms = new();
+            message.Request.Content?.WriteTo(ms, cancellationToken);
+            var sr = new StreamReader(ms);
+            System.Diagnostics.Debug.WriteLine($@"InternalTrackAsync(ReadOnlyMemory<byte>): {sr.ReadToEnd()}");
+#endif
 
             try
             {
