@@ -90,7 +90,7 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Models
             }
         }
 
-        public TelemetryItem (LogRecord logRecord, AzureMonitorResource? resource, string instrumentationKey) :
+        public TelemetryItem(LogRecord logRecord, AzureMonitorResource? resource, string instrumentationKey) :
             this(logRecord.Exception != null ? "Exception" : "Message", FormatUtcTimestamp(logRecord.Timestamp))
         {
             if (logRecord.TraceId != default)
@@ -121,7 +121,7 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Models
             Tags[ContextTagKeys.AiInternalSdkVersion.ToString()] = SdkVersionUtils.s_sdkVersion.Truncate(SchemaConstants.Tags_AiInternalSdkVersion_MaxLength);
         }
 
-        internal static DateTimeOffset FormatUtcTimestamp(System.DateTime utcTimestamp)
+        internal static DateTimeOffset FormatUtcTimestamp(DateTime utcTimestamp)
         {
             return DateTime.SpecifyKind(utcTimestamp, DateTimeKind.Utc);
         }

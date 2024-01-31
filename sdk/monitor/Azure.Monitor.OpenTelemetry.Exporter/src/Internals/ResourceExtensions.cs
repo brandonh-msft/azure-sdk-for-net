@@ -5,9 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+
 using Azure.Monitor.OpenTelemetry.Exporter.Internals.Diagnostics;
 using Azure.Monitor.OpenTelemetry.Exporter.Internals.Platform;
 using Azure.Monitor.OpenTelemetry.Exporter.Models;
+
 using OpenTelemetry.Resources;
 
 namespace Azure.Monitor.OpenTelemetry.Exporter.Internals;
@@ -26,7 +28,7 @@ internal static class ResourceExtensions
             return null;
         }
 
-        AzureMonitorResource azureMonitorResource = new AzureMonitorResource();
+        AzureMonitorResource azureMonitorResource = new(resource);
         MetricsData? metricsData = null;
         AksResourceProcessor? aksResourceProcessor = null;
         string? serviceName = null;
