@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.CompilerServices;
 
 using Azure.Monitor.OpenTelemetry.Exporter.Internals;
@@ -67,43 +65,6 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Models
             {
                 SampleRate = sampleRate;
             }
-
-            SetTagsFrom(activity, resource);
-        }
-
-        private void SetTagsFrom(Activity activity, AzureMonitorResource? resource)
-        {
-            SetTagsFrom(resource);
-
-            // Activity-level tags trump resource-level tags.
-            foreach (KeyValuePair<string, string?> r in activity.Tags.Where(i => !Tags.ContainsKey(i.Key) && i.Value is not null))
-            {
-                Tags[r.Key] = r.Value!;
-            }
-        }
-
-        private void SetTagsFrom(LogRecord logRecord, AzureMonitorResource? resource)
-        {
-            SetTagsFrom(resource);
-
-            if (logRecord.Attributes is not null)
-            {
-                foreach (KeyValuePair<string, object?> r in logRecord.Attributes.Where(i => !Tags.ContainsKey(i.Key) && i.Value is not null))
-                {
-                    Tags[r.Key] = r.Value!.ToString();
-                }
-            }
-        }
-
-        private void SetTagsFrom(AzureMonitorResource? resource)
-        {
-            if (resource is not null)
-            {
-                foreach (KeyValuePair<string, object> i in resource.OtelResource.Attributes)
-                {
-                    Tags[i.Key] = i.Value.ToString();
-                }
-            }
         }
 
         public TelemetryItem(string name, TelemetryItem telemetryItem, ActivitySpanId activitySpanId, ActivityKind kind, DateTimeOffset activityEventTimeStamp) :
@@ -144,8 +105,6 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Models
 
             InstrumentationKey = instrumentationKey;
             SetResourceSdkVersionAndIkey(resource, instrumentationKey);
-
-            SetTagsFrom(logRecord, resource);
         }
 
         public TelemetryItem(DateTime time, AzureMonitorResource? resource, string instrumentationKey) : this("Metric", FormatUtcTimestamp(time))

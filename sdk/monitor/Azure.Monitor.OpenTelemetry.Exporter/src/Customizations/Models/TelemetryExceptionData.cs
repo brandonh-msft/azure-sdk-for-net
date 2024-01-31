@@ -16,7 +16,7 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Models
     {
         internal const int MaxExceptionCountToSave = 10;
 
-        public TelemetryExceptionData(int version, LogRecord logRecord) : base(version)
+        public TelemetryExceptionData(int version, LogRecord logRecord, AzureMonitorResource? resource = null) : base(version)
         {
             if (logRecord.Exception == null)
             {
@@ -26,7 +26,7 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Models
             Properties = new ChangeTrackingDictionary<string, string>();
             Measurements = new ChangeTrackingDictionary<string, double>();
 
-            var message = LogsHelper.GetMessageAndSetProperties(logRecord, Properties);
+            var message = LogsHelper.GetMessageAndSetProperties(logRecord, Properties, resource);
 
             SeverityLevel = LogsHelper.GetSeverityLevel(logRecord.LogLevel);
             ProblemId = LogsHelper.GetProblemId(logRecord.Exception).Truncate(SchemaConstants.ExceptionData_ProblemId_MaxLength);

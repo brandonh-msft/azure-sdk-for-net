@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+
 using Azure.Monitor.OpenTelemetry.Exporter.Internals.Diagnostics;
 using Azure.Monitor.OpenTelemetry.Exporter.Models;
 
@@ -62,7 +63,7 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Internals
                         telemetryItem.Data = new MonitorBase
                         {
                             BaseType = "ExceptionData",
-                            BaseData = new TelemetryExceptionData(Version, logRecord),
+                            BaseData = new TelemetryExceptionData(Version, logRecord, resource),
                         };
                     }
                     else
@@ -70,7 +71,7 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Internals
                         telemetryItem.Data = new MonitorBase
                         {
                             BaseType = "MessageData",
-                            BaseData = new MessageData(Version, logRecord),
+                            BaseData = new MessageData(Version, logRecord, resource),
                         };
                     }
 
@@ -85,7 +86,8 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Internals
             return telemetryItems;
         }
 
-        internal static string? GetMessageAndSetProperties(LogRecord logRecord, IDictionary<string, string> properties)
+        internal static string? GetMessageAndSetProperties(LogRecord logRecord, IDictionary<string, string> properties) => GetMessageAndSetProperties(logRecord, properties, null);
+        internal static string? GetMessageAndSetProperties(LogRecord logRecord, IDictionary<string, string> properties, AzureMonitorResource? resource)
         {
             string? message = logRecord.Exception?.Message ?? logRecord.FormattedMessage;
 
@@ -113,6 +115,24 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Internals
                             {
                                 properties.Add(item.Key, item.Value.ToString().Truncate(SchemaConstants.MessageData_Properties_MaxValueLength)!);
                             }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AzureMonitorExporterEventSource.Log.FailedToAddLogAttribute(item.Key, ex);
+                    }
+                }
+            }
+
+            if (resource is not null)
+            {
+                foreach (KeyValuePair<string, object> item in resource.OtelResource.Attributes.Where(item => item.Key.Length <= SchemaConstants.MessageData_Properties_MaxKeyLength))
+                {
+                    try
+                    {
+                        if (!properties.ContainsKey(item.Key))
+                        {
+                            properties.Add(item.Key, item.Value.ToString().Truncate(SchemaConstants.MessageData_Properties_MaxValueLength)!);
                         }
                     }
                     catch (Exception ex)
