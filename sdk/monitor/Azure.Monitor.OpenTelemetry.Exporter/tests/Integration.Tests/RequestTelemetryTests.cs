@@ -45,17 +45,9 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Integration.Tests
             // SETUP WEBAPPLICATION WITH OPENTELEMETRY
             var builder = WebApplication.CreateBuilder();
             builder.Services.AddOpenTelemetry()
-                .ConfigureResource(rb => rb.AddService("my-service1",
-                        "my-namespace1", "my-version1", serviceInstanceId: "my-instance-id1"))
                 .WithTracing(builder => builder
                     .AddAspNetCoreInstrumentation()
-                    .ConfigureResource(rb => rb.AddService("my-service2",
-                        "my-namespace2", "my-version2", serviceInstanceId: "my-instance-id2"))
-                    .AddAzureMonitorTraceExporterForTest(out telemetryItems)
-                    .ConfigureResource(rb => rb.AddService("my-service3",
-                        "my-namespace3", "my-version3", serviceInstanceId: "my-instance-id3")))
-                .ConfigureResource(rb => rb.AddService("my-service4",
-                        "my-namespace4", "my-version4", serviceInstanceId: "my-instance-id4"));
+                    .AddAzureMonitorTraceExporterForTest(out telemetryItems));
 
             var app = builder.Build();
             app.MapGet("/", () =>
@@ -141,12 +133,14 @@ namespace Azure.Monitor.OpenTelemetry.Exporter.Integration.Tests
                 expectedResponseCode: "200",
                 expectedUrl: TestServerUrl);
 
-            Assert.Equal("my-service", telemetryItem.Tags["service.name"]);
-            Assert.Equal("my-namespace", telemetryItem.Tags["service.namespace"]);
-            Assert.Equal("my-version", telemetryItem.Tags["service.version"]);
-            Assert.Equal("my-instance-id", telemetryItem.Tags["service.instance.id"]);
-            Assert.Equal("unittest", telemetryItem.Tags["my-attribute"]);
-            Assert.Equal(bool.FalseString, telemetryItem.Tags["my-flag"]);
+            var md = telemetryItem.Data.BaseData as MessageData;
+            Assert.NotNull(md);
+            Assert.Equal("my-service", md.Properties["service.name"]);
+            Assert.Equal("my-namespace", md.Properties["service.namespace"]);
+            Assert.Equal("my-version", md.Properties["service.version"]);
+            Assert.Equal("my-instance-id", md.Properties["service.instance.id"]);
+            Assert.Equal("unittest", md.Properties["my-attribute"]);
+            Assert.Equal(bool.FalseString, md.Properties["my-flag"]);
         }
 #endif
     }
