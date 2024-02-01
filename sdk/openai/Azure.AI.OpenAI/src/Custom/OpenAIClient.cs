@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Core.Sse;
@@ -43,6 +44,7 @@ namespace Azure.AI.OpenAI
             Argument.AssertNotNull(endpoint, nameof(endpoint));
             Argument.AssertNotNull(keyCredential, nameof(keyCredential));
             options ??= new OpenAIClientOptions();
+            AddHeadersToNotRedact(options);
 
             ClientDiagnostics = new ClientDiagnostics(options, true);
             _keyCredential = keyCredential;
@@ -81,6 +83,7 @@ namespace Azure.AI.OpenAI
             Argument.AssertNotNull(endpoint, nameof(endpoint));
             Argument.AssertNotNull(tokenCredential, nameof(tokenCredential));
             options ??= new OpenAIClientOptions();
+            AddHeadersToNotRedact(options);
 
             ClientDiagnostics = new ClientDiagnostics(options, true);
             _tokenCredential = tokenCredential;
@@ -955,6 +958,11 @@ namespace Azure.AI.OpenAI
             string boundary = (content as MultipartFormDataRequestContent).Boundary;
             request.Headers.Add("content-type", $"multipart/form-data; boundary={boundary}");
             return message;
+        }
+
+        private void AddHeadersToNotRedact(OpenAIClientOptions options)
+        {
+            options.Diagnostics.LoggedHeaderNames.Add("x-ratelimit-reset-requests");
         }
     }
 }
